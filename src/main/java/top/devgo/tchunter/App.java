@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -75,17 +73,17 @@ public class App {
 //			e.printStackTrace();
 //		}
         
-        String path = "D:\\workspace\\crawl\\tchunter\\img\\music";
-        app.badResult.clear();
+//        String path = "D:\\test\\";
+        String path = args[0];
         long begin = System.currentTimeMillis();
         int count = app.tcHuntAll(path);
         app.tcHunterThreadPool.shutdown(); 
         while (true) {  
             if (app.tcHunterThreadPool.isTerminated()) {  
-                System.out.println("结束了！");  
+                System.out.println("Result: ");  
                 break;  
             }  
-            Thread.sleep(200);  
+            Thread.sleep(500);  
         }  
         app.httpclient.close();
 		app.connectionManager.close();
