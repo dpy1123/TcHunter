@@ -24,7 +24,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * 调用网易云音乐的接口们
+ * 调用网易云音乐的接口
  * @author dd
  *
  */
