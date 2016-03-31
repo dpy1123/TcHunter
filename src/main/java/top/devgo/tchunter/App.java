@@ -73,8 +73,8 @@ public class App {
 //			e.printStackTrace();
 //		}
         
-//        String path = "D:\\test\\";
-        String path = args[0];
+        String path = "D:\\test\\";
+//        String path = args[0];
         long begin = System.currentTimeMillis();
         int count = app.tcHuntAll(path);
         app.tcHunterThreadPool.shutdown(); 

@@ -1,4 +1,4 @@
-package top.devgo.tchunter;
+package top.devgo.tchunter.api;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,6 +16,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import top.devgo.tchunter.util.StringUtil;
@@ -118,11 +119,11 @@ public class Music163Api {
 		Integer resultCode = (Integer) searchResult.get("code");
 		if(resultCode == 200){
 			Map<String, Object> result = (Map<String, Object>) searchResult.get("result");
-			System.out.println("search results count: "+result.get("songCount"));
 			List<Map<String, Object>> songs = (List<Map<String, Object>>) result.get("songs");//对null值进行强制转换后的返回值为null
 			if(songs == null){
 				return resultList;
 			}
+			System.out.println("search results count: "+songs.size()+" of "+result.get("songCount"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 				//艺术家
 				List<Map<String, Object>> artists = (List<Map<String, Object>>) song.get("artists");
@@ -240,5 +241,9 @@ public class Music163Api {
 			response.close();
 		}
 		return content;
+	}
+	
+	public static void main(String[] args) throws ClientProtocolException, IOException {
+		System.out.println(new Music163Api(HttpClients.createDefault(), new ObjectMapper()).searchMusic("僕じゃない"));
 	}
 }

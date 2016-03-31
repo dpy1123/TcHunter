@@ -1,4 +1,4 @@
-package top.devgo.tchunter;
+package top.devgo.tchunter.api;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -47,7 +47,7 @@ public class DongtingApi {
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public List<Map<String, Object>> search(String... keywords) throws ClientProtocolException, IOException{
+	public List<Map<String, Object>> searchMusic(String... keywords) throws ClientProtocolException, IOException{
 		if(keywords.length < 1)
 			throw new IllegalArgumentException("至少提供一个keywords") ;
 		
@@ -109,11 +109,11 @@ public class DongtingApi {
     	
 		Integer resultCode = (Integer) searchResult.get("code");
 		if(resultCode == 1){
-			System.out.println("search results count: "+searchResult.get("rows"));
 			List<Map<String, Object>> songs = (List<Map<String, Object>>) searchResult.get("data");//对null值进行强制转换后的返回值为null
 			if(songs == null){
 				return resultList;
 			}
+			System.out.println("search results count: "+songs.size()+" of "+searchResult.get("rows"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 				Map<String, Object> mp3 = new HashMap<String, Object>();
 				mp3.put("title", song.get("song_name"));
@@ -205,7 +205,7 @@ public class DongtingApi {
 	}
 	
 	public static void main(String[] args) throws ClientProtocolException, IOException {
-		System.out.println(new DongtingApi(HttpClients.createDefault(), new ObjectMapper()).search("僕じゃない"));
+		System.out.println(new DongtingApi(HttpClients.createDefault(), new ObjectMapper()).searchMusic("僕じゃない"));
 //		System.out.println(new DongtingApi(HttpClients.createDefault(), new ObjectMapper()).getLyric("僕じゃない", null, null));
 		System.out.println(new DongtingApi(HttpClients.createDefault(), new ObjectMapper()).getLyric("僕じゃない", "angela", ""));
 	}
