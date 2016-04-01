@@ -18,7 +18,6 @@ import org.apache.http.util.EntityUtils;
 
 import top.devgo.tchunter.util.StringUtil;
 
-import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -144,7 +143,35 @@ public class QQMusicApi {
     }
 	
 	
+	public byte[] downloadPic(String img_id) throws IOException {
+		byte[] content = null;
+		if(StringUtil.isNotBlank(img_id) && img_id.length()>2){
+			String s1 = img_id.substring(img_id.length()-2, img_id.length()-1);
+			String s2 = img_id.substring(img_id.length()-1, img_id.length());
+			HttpUriRequest request = RequestBuilder
+					.get()
+					//http://i.gtimg.cn/music/photo/mid_album_500/e/w/001Vnlyn2eaGew.jpg
+					.setUri("http://i.gtimg.cn/music/photo/mid_album_500/"+s1+"/"+s2+"/"+img_id+".jpg")
+					.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36")
+					.build();
+			CloseableHttpResponse response = httpclient.execute(request);
+			
+			try {
+				HttpEntity entity = response.getEntity();
+				if (entity != null) {
+					content = EntityUtils.toByteArray(entity);
+				}	
+			} finally {
+				response.close();
+			}
+		}
+		return content;
+	}
+	
+	
+	
 	public static void main(String[] args) throws ClientProtocolException, IOException {
-		System.out.println(new QQMusicApi(HttpClients.createDefault(), new ObjectMapper()).searchMusic("僕じゃない"));
+//		System.out.println(new QQMusicApi(HttpClients.createDefault(), new ObjectMapper()).searchMusic("僕じゃない"));
+		System.out.println(new QQMusicApi(HttpClients.createDefault(), new ObjectMapper()).downloadPic("001Vnlyn2eaGew"));
 	}
 }

@@ -105,7 +105,7 @@ public class DongtingApi {
      */
 	@SuppressWarnings("unchecked")
 	private List<Map<String, Object>> parseSearchResult(Map<String, Object> searchResult) {
-	List<Map<String, Object>> resultList = new LinkedList<Map<String, Object>>();
+		List<Map<String, Object>> resultList = new LinkedList<Map<String, Object>>();
     	
 		Integer resultCode = (Integer) searchResult.get("code");
 		if(resultCode == 1){
@@ -197,6 +197,7 @@ public class DongtingApi {
 		Map<String, Object> lrcInfo = mapper.readValue(lrcStr, new TypeReference<Map<String, Object>>() { } );
 		Integer result_code = (Integer) lrcInfo.get("code");
 		if(result_code == 1){
+			@SuppressWarnings("unchecked")
 			Map<String, Object> lrc = (Map<String, Object>) lrcInfo.get("data");
 			if(lrc != null)
 				result = (String) lrc.get("lrc");
