@@ -121,7 +121,7 @@ public class Music163Api {
 			Map<String, Object> result = (Map<String, Object>) searchResult.get("result");
 			List<Map<String, Object>> songs = (List<Map<String, Object>>) result.get("songs");//对null值进行强制转换后的返回值为null
 			if(songs == null){
-				return resultList;
+				return null;
 			}
 			System.out.println("search results count: "+songs.size()+" of "+result.get("songCount"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错

@@ -117,26 +117,27 @@ public class QQMusicApi {
 			Map<String, Object> result = (Map<String, Object>) (((Map<String, Object>)searchResult.get("data"))).get("song");
 			List<Map<String, Object>> songs = (List<Map<String, Object>>) result.get("list");//对null值进行强制转换后的返回值为null
 			if(songs == null){
-				return resultList;
+				return null;
 			}
 			System.out.println("search results count: "+songs.size()+" of "+result.get("totalnum"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
-				Map<String, Object> mp3 = new HashMap<String, Object>();
 				String f = (String) song.get("f");
 				if(StringUtil.isNotBlank(f)){
 					String[] fileds = f.split("\\|");
-					//4810477|僕じゃない|12411|Angela|427696|ZERO|2282174|264|6|1|2|10587117|4234132|320000|0|0|0|6291201|6652667|0
-					//|004NXqYt3TEgWR|000oEvjV2FuRnP|001Vnlyn2eaGew|0|8013
-					mp3.put("title", fileds[1]);
-					mp3.put("artist", fileds[3]);
-					mp3.put("album", fileds[5]);
-					mp3.put("duration", 1000 * Integer.parseInt(fileds[7]));
-					mp3.put("id", fileds[20]);
-					mp3.put("img_id", fileds[22]);
-					mp3.put("lrc_id", fileds[0]);
+					if(fileds.length == 25){
+						Map<String, Object> mp3 = new HashMap<String, Object>();
+						//4810477|僕じゃない|12411|Angela|427696|ZERO|2282174|264|6|1|2|10587117|4234132|320000|0|0|0|6291201|6652667|0
+						//|004NXqYt3TEgWR|000oEvjV2FuRnP|001Vnlyn2eaGew|0|8013
+						mp3.put("title", fileds[1]);
+						mp3.put("artist", fileds[3]);
+						mp3.put("album", fileds[5]);
+						mp3.put("duration", 1000 * Integer.parseInt(fileds[7]));
+						mp3.put("id", fileds[20]);
+						mp3.put("img_id", fileds[22]);
+						mp3.put("lrc_id", fileds[0]);
+						resultList.add(mp3);
+					}
 				}
-				
-				resultList.add(mp3);
 			}
 		}
     	return resultList;

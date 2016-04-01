@@ -1,6 +1,7 @@
 package top.devgo.tchunter;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -8,10 +9,17 @@ import java.util.Map;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mpatric.mp3agic.InvalidDataException;
+import com.mpatric.mp3agic.UnsupportedTagException;
 
+import top.devgo.tchunter.api.BaiduMusicApi;
+import top.devgo.tchunter.api.DongtingApi;
+import top.devgo.tchunter.api.KuwoApi;
 import top.devgo.tchunter.api.Music163Api;
+import top.devgo.tchunter.api.QQMusicApi;
 import top.devgo.tchunter.util.IOUtil;
 import top.devgo.tchunter.util.StringUtil;
 
@@ -105,14 +113,19 @@ public class TcHunter implements Runnable {
     		String targetStr = mp3Info.get("title").toString().trim().toLowerCase();
     		double title_rank = 20 * 1.0 / (1 + StringUtil.editDistance(testStr, targetStr));
     		//duration_rank = 20*相似度
-			int testInt = (Integer) searchResult.get("duration");
+			int testInt = 0;
+			if(searchResult.get("duration") instanceof Integer){
+				testInt = (Integer) searchResult.get("duration");
+			}else{
+				testInt = ((Long) searchResult.get("duration")).intValue();
+			}
 			int targetInt = ((Long) mp3Info.get("duration")).intValue();
 			double duration_rank = 20 * 1.0 / (1 + Math.abs(testInt-targetInt));//1/1+x
 //			double duration_rank = 20 * (1 - 1.0*Math.abs(testInt-targetInt)/targetInt);
 			
 			double track_rank = 0, album_rank = 0, artist_rank = 0;
     		//track = 20*相似度
-			if (mp3Info.containsKey("track")) {
+			if (mp3Info.containsKey("track") && searchResult.containsKey("track")) {
 				testStr = searchResult.get("track").toString().trim();
 				targetStr = mp3Info.get("track").toString().trim();
 				track_rank = 20 * 1.0 / (1 + StringUtil.editDistance(testStr, targetStr));
@@ -175,5 +188,37 @@ public class TcHunter implements Runnable {
 		if (extension.length() < 1)
 			return (null);
 		return (mimeMappings.get(extension));
+	}
+	
+	public static void main(String[] args) throws Exception {
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+		ObjectMapper mapper = new ObjectMapper();
+		String mp3file = "D:\\test\\Fallen.mp3";
+		Music163Api music163 = new Music163Api(httpClient, mapper);
+		BaiduMusicApi baiduMusic = new BaiduMusicApi(httpClient, mapper);
+		DongtingApi dongting = new DongtingApi(httpClient, mapper);
+		QQMusicApi qqMusic = new QQMusicApi(httpClient, mapper);
+		KuwoApi kuwo = new KuwoApi(httpClient, mapper);
+		//get mp3info 
+		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
+		System.out.println("mp3Info: "+mp3Info);
+		//search
+		List<Map<String, Object>> searchResult = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
+		searchResult.addAll(baiduMusic.search((String)mp3Info.get("title")));
+		searchResult.addAll(dongting.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album")));
+		searchResult.addAll(qqMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album")));
+		searchResult.addAll(kuwo.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album")));
+		if(searchResult.size() < 1) return;
+		for (int i = 0; i < searchResult.size(); i++) {
+			System.out.println(searchResult.get(i));
+		}
+		//get bestfit
+		try {
+			
+			Map<String, Object> best = new TcHunter(httpClient, mapper,null,mp3file).getBestFit(searchResult, mp3Info);
+			System.out.println("bestFit: " + best);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

@@ -111,7 +111,7 @@ public class DongtingApi {
 		if(resultCode == 1){
 			List<Map<String, Object>> songs = (List<Map<String, Object>>) searchResult.get("data");//对null值进行强制转换后的返回值为null
 			if(songs == null){
-				return resultList;
+				return null;
 			}
 			System.out.println("search results count: "+songs.size()+" of "+searchResult.get("rows"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
