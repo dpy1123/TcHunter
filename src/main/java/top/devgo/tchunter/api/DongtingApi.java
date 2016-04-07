@@ -57,7 +57,7 @@ public class DongtingApi {
 				keyword += keywords[i];
 			if(i<keywords.length-1) keyword += " ";
 		}
-		System.out.println("keyword: "+keyword);
+		System.out.println("[天天动听]keyword: "+keyword);
 		
 		HttpUriRequest request = RequestBuilder
 				.get()
@@ -113,7 +113,7 @@ public class DongtingApi {
 			if(songs == null){
 				return null;
 			}
-			System.out.println("search results count: "+songs.size()+" of "+searchResult.get("rows"));
+			System.out.println("[天天动听]search results count: "+songs.size()+" of "+searchResult.get("rows"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 				Map<String, Object> mp3 = new HashMap<String, Object>();
 				mp3.put("title", song.get("song_name"));

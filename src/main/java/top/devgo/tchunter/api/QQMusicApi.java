@@ -53,7 +53,7 @@ public class QQMusicApi {
 				keyword += keywords[i];
 			if(i<keywords.length-1) keyword += " ";
 		}
-		System.out.println("keyword: "+keyword);
+		System.out.println("[QQ音乐]keyword: "+keyword);
 		
 		HttpUriRequest request = RequestBuilder
 				.get()
@@ -119,7 +119,7 @@ public class QQMusicApi {
 			if(songs == null){
 				return null;
 			}
-			System.out.println("search results count: "+songs.size()+" of "+result.get("totalnum"));
+			System.out.println("[QQ音乐]search results count: "+songs.size()+" of "+result.get("totalnum"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 				String f = (String) song.get("f");
 				if(StringUtil.isNotBlank(f)){
@@ -172,7 +172,7 @@ public class QQMusicApi {
 	
 	
 	public static void main(String[] args) throws ClientProtocolException, IOException {
-//		System.out.println(new QQMusicApi(HttpClients.createDefault(), new ObjectMapper()).searchMusic("僕じゃない"));
+		System.out.println(new QQMusicApi(HttpClients.createDefault(), new ObjectMapper()).searchMusic("僕じゃない"));
 		System.out.println(new QQMusicApi(HttpClients.createDefault(), new ObjectMapper()).downloadPic("001Vnlyn2eaGew"));
 	}
 }

@@ -64,14 +64,6 @@ public class App {
 
 	public static void main( String[] args ) throws IOException, InterruptedException {
         App app = new App();
-//        try {
-//        	String path = "D:\\workspace\\crawl\\tchunter\\img\\To be with U!.mp3";
-//			app.tcHunt(path);
-//			Mp3Helper.displayMp3Info(path);
-//			
-//        } catch (Exception e) {
-//			e.printStackTrace();
-//		}
         
         String path = "D:\\test\\";
 //        String path = args[0];
@@ -90,7 +82,7 @@ public class App {
         long duration = System.currentTimeMillis() - begin;
         System.out.println("总耗时: "+duration/1000+" s");
         System.out.println("扫描: "+count+" 首歌曲");
-        System.out.println("bad list: "+ app.badResult.size());
+//        System.out.println("bad list: "+ app.badResult.size());
         
     }
 	
@@ -137,6 +129,4 @@ public class App {
 		return count;
 	}
 	
-	
-
 }

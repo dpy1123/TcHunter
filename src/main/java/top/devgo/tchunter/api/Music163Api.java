@@ -62,7 +62,7 @@ public class Music163Api {
 				keyword += keywords[i];
 			if(i<keywords.length-1) keyword += " ";
 		}
-		System.out.println("keyword: "+keyword);
+		System.out.println("[网易云音乐]keyword: "+keyword);
 		
 		HttpUriRequest request = RequestBuilder
 				.post()
@@ -123,7 +123,7 @@ public class Music163Api {
 			if(songs == null){
 				return null;
 			}
-			System.out.println("search results count: "+songs.size()+" of "+result.get("songCount"));
+			System.out.println("[网易云音乐]search results count: "+songs.size()+" of "+result.get("songCount"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 				//艺术家
 				List<Map<String, Object>> artists = (List<Map<String, Object>>) song.get("artists");
@@ -158,6 +158,7 @@ public class Music163Api {
 	@SuppressWarnings("unchecked")
 	public String getLyric(String id) throws IOException {
 		String result = null;
+		if(StringUtil.isBlank(id)) return result;
 		HttpUriRequest request = RequestBuilder
 				.get()
 				.setUri("http://music.163.com/api/song/lyric")//?os=pc&id=93920&lv=-1&kv=-1&tv=-1

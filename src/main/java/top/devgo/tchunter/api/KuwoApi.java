@@ -58,7 +58,7 @@ public class KuwoApi {
 				keyword += keywords[i];
 			if(i<keywords.length-1) keyword += " ";
 		}
-		System.out.println("keyword: "+keyword);
+		System.out.println("[酷我音乐]keyword: "+keyword);
 		
 		HttpUriRequest request = RequestBuilder
 				.get()
@@ -114,7 +114,7 @@ public class KuwoApi {
 		if(songs == null){
 			return null;
 		}
-		System.out.println("search results count: "+songs.size()+" of "+searchResult.get("TOTAL"));
+		System.out.println("[酷我音乐]search results count: "+songs.size()+" of "+searchResult.get("TOTAL"));
 		for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 			Map<String, Object> mp3 = new HashMap<String, Object>();
 			mp3.put("title", song.get("NAME"));

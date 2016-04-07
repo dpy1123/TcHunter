@@ -114,7 +114,12 @@ public class Mp3Helper {
 		}
 		track = id3v2Tag.getTrack();
 		if(StringUtil.isBlank(track) ){
-			id3v2Tag.setTrack((String) bestfit_mp3Info.get("track"));
+			Object trk = bestfit_mp3Info.get("track");
+			if(trk instanceof Integer){
+				id3v2Tag.setTrack(trk+"");
+			}else{
+				id3v2Tag.setTrack((String)trk);
+			}
 		}
 		artist = id3v2Tag.getArtist();
 		if(StringUtil.isBlank(artist) || StringUtil.isMessyCode(artist)){

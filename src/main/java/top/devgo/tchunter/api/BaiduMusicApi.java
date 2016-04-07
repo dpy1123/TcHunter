@@ -21,6 +21,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import top.devgo.tchunter.util.StringUtil;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -42,8 +44,17 @@ public class BaiduMusicApi {
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public List<Map<String, Object>> search(String keyword) throws ClientProtocolException, IOException{
-		System.out.println("keyword: "+keyword);
+	public List<Map<String, Object>> searchMusic(String... keywords) throws ClientProtocolException, IOException{
+		if(keywords.length < 1)
+			throw new IllegalArgumentException("至少提供一个keywords") ;
+		
+		String keyword = "";
+		for (int i = 0; i < keywords.length; i++) {
+			if(StringUtil.isNotBlank(keywords[i]))
+				keyword += keywords[i];
+			if(i<keywords.length-1) keyword += " ";
+		}
+		System.out.println("[百度音乐]keyword: "+keyword);
 		
 		HttpUriRequest request = RequestBuilder
 				.get()
@@ -58,18 +69,7 @@ public class BaiduMusicApi {
 		try {
 			HttpEntity entity = response.getEntity();
 			if (entity != null) {
-				Header contentType = entity.getContentType();
 				String encoding = "utf-8";
-				if(contentType != null){
-					String type = contentType.getValue();
-					if(type != null && type.startsWith("text/")){//Content-Type:text/html;charset=utf-8;
-						encoding = type.substring(type.lastIndexOf("charset=") + "charset=".length());
-						int pos = encoding.lastIndexOf(";");
-						if(pos > -1){
-							encoding = encoding.substring(0, pos);
-						}
-					}
-				}
 				
 				htmlStr = EntityUtils.toString(entity, encoding);
 			}	
@@ -95,7 +95,7 @@ public class BaiduMusicApi {
 			}
 		}
 		
-		System.out.println("search results count: "+ids.size());
+		System.out.println("[百度音乐]search results count: "+ids.size());
 		
 		List<Map<String, Object>> songs = new LinkedList<Map<String, Object>>();
 		for (String id : ids) {
@@ -174,12 +174,14 @@ public class BaiduMusicApi {
 	}
 	
 	public String getLyric(String url) throws IOException {
+		String lrcStr = null;
+		if(StringUtil.isBlank(url)) return lrcStr;
+		url = StringUtil.normalizeUrl(url);
 		HttpUriRequest request = RequestBuilder
 				.get()
 				.setUri(url)
 				.build();
 		CloseableHttpResponse response = httpclient.execute(request);
-		String lrcStr = null;
 		try {
 			HttpEntity entity = response.getEntity();
 			if (entity != null) {
@@ -206,6 +208,12 @@ public class BaiduMusicApi {
 		return lrcStr;
 	}
 	
+	/**
+	 * 百度的图片质量一般，没有图片的专辑也给个占位图
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
 	public byte[] downloadPic(String url) throws IOException {
 		byte[] content = null;
 		HttpUriRequest request = RequestBuilder
@@ -229,7 +237,7 @@ public class BaiduMusicApi {
 	
 	
 	public static void main(String[] args) throws ClientProtocolException, IOException {
-		System.out.println(new BaiduMusicApi(HttpClients.createDefault(), new ObjectMapper()).search("僕じゃない"));
+		System.out.println(new BaiduMusicApi(HttpClients.createDefault(), new ObjectMapper()).searchMusic("僕じゃない"));
 		System.out.println(new BaiduMusicApi(HttpClients.createDefault(), new ObjectMapper()).getLyric("http://musicdata.baidu.com/data2/lrc/65445557/65445557.lrc"));
 //		System.out.println(new BaiduMusicApi(HttpClients.createDefault(), new ObjectMapper()).downloadPic("http://musicdata.baidu.com/data2/pic/43742380/43742380.jpg"));
 	}

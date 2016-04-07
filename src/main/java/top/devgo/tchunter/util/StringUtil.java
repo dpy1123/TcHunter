@@ -145,4 +145,14 @@ public class StringUtil {
 		return d[source.length()][target.length()];
 	}
 
+	/**
+	 * 规范化url
+	 * @param url
+	 * @return
+	 */
+	public static String normalizeUrl(String url){
+		if(!url.startsWith("http://"))
+			url = "http://"+url;
+		return url;
+	}
 }
