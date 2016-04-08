@@ -15,6 +15,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 
 import top.devgo.tchunter.util.StringUtil;
 
@@ -24,6 +25,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 public class KuwoApi {
+	private static Logger logger = Logger.getLogger(KuwoApi.class.getName());
+	
 	/**
 	 * 搜索最多返回条数，默认100
 	 */
@@ -58,7 +61,7 @@ public class KuwoApi {
 				keyword += keywords[i];
 			if(i<keywords.length-1) keyword += " ";
 		}
-		System.out.println("[酷我音乐]keyword: "+keyword);
+		logger.info("[酷我音乐]keyword: "+keyword);
 		
 		HttpUriRequest request = RequestBuilder
 				.get()
@@ -114,7 +117,7 @@ public class KuwoApi {
 		if(songs == null){
 			return null;
 		}
-		System.out.println("[酷我音乐]search results count: "+songs.size()+" of "+searchResult.get("TOTAL"));
+		logger.info("[酷我音乐]search results count: "+songs.size()+" of "+searchResult.get("TOTAL"));
 		for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 			Map<String, Object> mp3 = new HashMap<String, Object>();
 			mp3.put("title", song.get("NAME"));
@@ -123,7 +126,6 @@ public class KuwoApi {
 			mp3.put("album", song.get("ALBUM"));
 			mp3.put("duration", 1000 * Integer.parseInt((String) song.get("DURATION")));
 			
-//			System.out.println(mp3);
 			resultList.add(mp3);
 		}
     	return resultList;

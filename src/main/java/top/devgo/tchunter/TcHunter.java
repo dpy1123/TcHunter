@@ -9,6 +9,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,6 +27,7 @@ import top.devgo.tchunter.util.StringUtil;
  *
  */
 public class TcHunter implements Runnable {
+	private static Logger logger = Logger.getLogger(TcHunter.class.getName());
 	
 	private CloseableHttpClient httpClient;
 	private ObjectMapper mapper;
@@ -59,7 +61,7 @@ public class TcHunter implements Runnable {
 	public void updateMp3Info() throws Exception {
 		//get mp3info 
 		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
-		System.out.println("mp3Info: " + mp3Info);
+		logger.info("mp3Info: " + mp3Info);
 		//search
 		List<Map<String, Object>> searchResult = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
 		searchResult.addAll(baiduMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album")));
@@ -69,7 +71,7 @@ public class TcHunter implements Runnable {
 		if(searchResult != null &&searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			System.out.println("bestFit: " + best);
+			logger.info("bestFit: " + best);
 			//update mp3info
 			TcMp3File file = new TcMp3File(mp3file);
 			Mp3Helper.updateMp3Info(file, best);
@@ -83,13 +85,13 @@ public class TcHunter implements Runnable {
 	public void downloadLrc() throws Exception {
 		//get mp3info 
 		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
-		System.out.println("mp3Info: " + mp3Info);
+		logger.info("mp3Info: " + mp3Info);
 		//search music163
 		List<Map<String, Object>> searchResult = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			System.out.println("bestFit: " + best);
+			logger.info("bestFit: " + best);
 			//download lrc
 			String path = mp3file.substring(0, mp3file.lastIndexOf("."));
 			String lyric = music163.getLyric(String.valueOf(best.get("id")));
@@ -103,7 +105,7 @@ public class TcHunter implements Runnable {
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			System.out.println("bestFit: " + best);
+			logger.info("bestFit: " + best);
 			//download lrc
 			String path = mp3file.substring(0, mp3file.lastIndexOf("."));
 			String lyric = baiduMusic.getLyric((String) best.get("lrc_url"));
@@ -129,14 +131,14 @@ public class TcHunter implements Runnable {
 	public void updateAlbumPic() throws Exception {
 		//get mp3info 
 		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
-		System.out.println("mp3Info: " + mp3Info);
+		logger.info("mp3Info: " + mp3Info);
 		TcMp3File file = new TcMp3File(mp3file);
 		//search music163
 		List<Map<String, Object>> searchResult = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			System.out.println("bestFit: " + best);
+			logger.info("bestFit: " + best);
 			//add album_pic
 			String pic_url = (String) best.get("album_pic");//http://p3.music.126.net/FtUrdiJ_4xqA9r24cVPzpA==/730075720865799.jpg
 			byte[] albumImageData = music163.downloadPic(pic_url);
@@ -150,7 +152,7 @@ public class TcHunter implements Runnable {
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			System.out.println("bestFit: " + best);
+			logger.info("bestFit: " + best);
 			//add album_pic
 			String pic_url = (String) best.get("img_id");
 			byte[] albumImageData = qqMusic.downloadPic(pic_url);
@@ -164,7 +166,7 @@ public class TcHunter implements Runnable {
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			System.out.println("bestFit: " + best);
+			logger.info("bestFit: " + best);
 			//add album_pic
 			String pic_url = (String) best.get("artist_pic240");
 			byte[] albumImageData = kuwo.downloadPic(pic_url);
@@ -178,7 +180,7 @@ public class TcHunter implements Runnable {
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			System.out.println("bestFit: " + best);
+			logger.info("bestFit: " + best);
 			//add album_pic
 			String pic_url = (String) best.get("album_pic_url");
 			byte[] albumImageData = baiduMusic.downloadPic(pic_url);
@@ -203,16 +205,16 @@ public class TcHunter implements Runnable {
 		Music163Api music163 = new Music163Api(httpClient, mapper);
 		//get mp3info 
 		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
-		System.out.println("mp3Info: "+mp3Info);
+		logger.info("mp3Info: "+mp3Info);
 		//search
 		List<Map<String, Object>> searchResult = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
 	//		for (int i = 0; i < searchResult.size(); i++) {
-	//			System.out.println(searchResult.get(i));
+	//			logger.info(searchResult.get(i));
 	//		}
-			System.out.println("bestFit: " + best);
+			logger.info("bestFit: " + best);
 			//rank不足20分，则记录到badResult，并返回
 			if(badResult != null && (Double)best.get("rank") < 20){
 				Map<String, Object> bad = new HashMap<String, Object>();

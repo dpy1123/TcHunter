@@ -18,6 +18,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 
 import top.devgo.tchunter.util.StringUtil;
 
@@ -30,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  */
 public class Music163Api {
+	private static Logger logger = Logger.getLogger(Music163Api.class.getName());
 	/**
 	 * 搜索最多返回条数，默认100
 	 */
@@ -62,7 +64,7 @@ public class Music163Api {
 				keyword += keywords[i];
 			if(i<keywords.length-1) keyword += " ";
 		}
-		System.out.println("[网易云音乐]keyword: "+keyword);
+		logger.info("[网易云音乐]keyword: "+keyword);
 		
 		HttpUriRequest request = RequestBuilder
 				.post()
@@ -123,7 +125,7 @@ public class Music163Api {
 			if(songs == null){
 				return null;
 			}
-			System.out.println("[网易云音乐]search results count: "+songs.size()+" of "+result.get("songCount"));
+			logger.info("[网易云音乐]search results count: "+songs.size()+" of "+result.get("songCount"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 				//艺术家
 				List<Map<String, Object>> artists = (List<Map<String, Object>>) song.get("artists");
@@ -146,8 +148,6 @@ public class Music163Api {
 				mp3.put("album", album_name);
 				mp3.put("duration", song.get("duration"));
 				mp3.put("album_pic", album_pic);
-				
-//				System.out.println(mp3);
 				
 				resultList.add(mp3);
 			}

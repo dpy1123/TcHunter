@@ -15,6 +15,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 
 import top.devgo.tchunter.util.StringUtil;
 
@@ -27,6 +28,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  */
 public class DongtingApi {
+	private static Logger logger = Logger.getLogger(DongtingApi.class.getName());
+	
 	/**
 	 * 搜索最多返回条数，默认100
 	 */
@@ -57,7 +60,7 @@ public class DongtingApi {
 				keyword += keywords[i];
 			if(i<keywords.length-1) keyword += " ";
 		}
-		System.out.println("[天天动听]keyword: "+keyword);
+		logger.info("[天天动听]keyword: "+keyword);
 		
 		HttpUriRequest request = RequestBuilder
 				.get()
@@ -113,7 +116,7 @@ public class DongtingApi {
 			if(songs == null){
 				return null;
 			}
-			System.out.println("[天天动听]search results count: "+songs.size()+" of "+searchResult.get("rows"));
+			logger.info("[天天动听]search results count: "+songs.size()+" of "+searchResult.get("rows"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 				Map<String, Object> mp3 = new HashMap<String, Object>();
 				mp3.put("title", song.get("song_name"));
@@ -130,7 +133,6 @@ public class DongtingApi {
 				}
 				mp3.put("duration", duration);
 				
-//				System.out.println(mp3);
 				resultList.add(mp3);
 			}
 		}

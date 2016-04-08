@@ -16,6 +16,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BaiduMusicApi {
+	private static Logger logger = Logger.getLogger(BaiduMusicApi.class.getName());
 	
 	private CloseableHttpClient httpclient;
 	private ObjectMapper mapper; 
@@ -54,7 +56,7 @@ public class BaiduMusicApi {
 				keyword += keywords[i];
 			if(i<keywords.length-1) keyword += " ";
 		}
-		System.out.println("[百度音乐]keyword: "+keyword);
+		logger.info("[百度音乐]keyword: "+keyword);
 		
 		HttpUriRequest request = RequestBuilder
 				.get()
@@ -95,7 +97,7 @@ public class BaiduMusicApi {
 			}
 		}
 		
-		System.out.println("[百度音乐]search results count: "+ids.size());
+		logger.info("[百度音乐]search results count: "+ids.size());
 		
 		List<Map<String, Object>> songs = new LinkedList<Map<String, Object>>();
 		for (String id : ids) {

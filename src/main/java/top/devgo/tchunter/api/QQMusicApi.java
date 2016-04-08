@@ -15,6 +15,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 
 import top.devgo.tchunter.util.StringUtil;
 
@@ -22,6 +23,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class QQMusicApi {
+	private static Logger logger = Logger.getLogger(QQMusicApi.class.getName());
 	/**
 	 * 搜索最多返回条数，默认100
 	 */
@@ -53,7 +55,7 @@ public class QQMusicApi {
 				keyword += keywords[i];
 			if(i<keywords.length-1) keyword += " ";
 		}
-		System.out.println("[QQ音乐]keyword: "+keyword);
+		logger.info("[QQ音乐]keyword: "+keyword);
 		
 		HttpUriRequest request = RequestBuilder
 				.get()
@@ -119,7 +121,7 @@ public class QQMusicApi {
 			if(songs == null){
 				return null;
 			}
-			System.out.println("[QQ音乐]search results count: "+songs.size()+" of "+result.get("totalnum"));
+			logger.info("[QQ音乐]search results count: "+songs.size()+" of "+result.get("totalnum"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 				String f = (String) song.get("f");
 				if(StringUtil.isNotBlank(f)){

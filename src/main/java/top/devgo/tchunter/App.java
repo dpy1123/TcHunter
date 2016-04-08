@@ -7,13 +7,16 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
+
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class App {
+	private static Logger logger = Logger.getLogger(App.class.getName());
 	private PoolingHttpClientConnectionManager connectionManager;
 	/**
 	 * 设置PoolingHttpClientConnectionManager的connection re-validate time，默认50ms
@@ -72,7 +75,7 @@ public class App {
         app.tcHunterThreadPool.shutdown(); 
         while (true) {  
             if (app.tcHunterThreadPool.isTerminated()) {  
-                System.out.println("Result: ");  
+                logger.info("Result: ");  
                 break;  
             }  
             Thread.sleep(500);  
@@ -80,9 +83,9 @@ public class App {
         app.httpclient.close();
 		app.connectionManager.close();
         long duration = System.currentTimeMillis() - begin;
-        System.out.println("总耗时: "+duration/1000+" s");
-        System.out.println("扫描: "+count+" 首歌曲");
-//        System.out.println("bad list: "+ app.badResult.size());
+        logger.info("总耗时: "+duration/1000+" s");
+        logger.info("扫描: "+count+" 首歌曲");
+//        logger.info("bad list: "+ app.badResult.size());
         
     }
 	
@@ -109,7 +112,7 @@ public class App {
 							count++;
 						} catch (Exception e) {
 							e.printStackTrace();
-							System.err.println("处理["+filename+"]报错: "+e.getMessage());
+							logger.error("处理["+filename+"]报错: "+e.getMessage(), e);
 						}
 					}
 				}
@@ -122,7 +125,7 @@ public class App {
         			count++;
         		} catch (Exception e) {
         			e.printStackTrace();
-        			System.err.println("处理["+path+"]报错: "+e.getMessage());
+        			logger.error("处理["+path+"]报错: "+e.getMessage(), e);
         		}
         	}
         }
