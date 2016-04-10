@@ -146,6 +146,7 @@ public class BaiduMusicApi {
 				}
 				
 				jsonResult = EntityUtils.toString(entity, encoding);
+				EntityUtils.consume(entity);
 			}	
 		} finally {
 			if (response != null) {

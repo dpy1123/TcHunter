@@ -96,6 +96,7 @@ public class Music163Api {
 				}
 				
 				jsonResult = EntityUtils.toString(entity, encoding);
+				EntityUtils.consume(entity);
 			}	
 		} finally {
 			if (response != null) {

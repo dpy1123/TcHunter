@@ -2,12 +2,13 @@ package top.devgo.tchunter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Map;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
 
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -34,7 +35,10 @@ public class App {
 	
 	private CloseableHttpClient httpclient;
 	private ObjectMapper mapper;
-	private PriorityBlockingQueue<Map<String, Object>> badResult;
+	/**
+	 * 保存无图、无词的mp3名
+	 */
+	private Map<String, Vector<String>> badResult;
 	
 	public App() {
 		// Create an HttpClient with the ThreadSafeClientConnManager.
@@ -43,23 +47,20 @@ public class App {
 		connectionManager = new PoolingHttpClientConnectionManager();
 		connectionManager.setValidateAfterInactivity(connectionValidateInterval);
 		connectionManager.setMaxTotal(maxConnections);
-		httpclient = HttpClients.custom().setConnectionManager(connectionManager).build();
+		RequestConfig config = RequestConfig.custom()
+				  .setSocketTimeout(5000)
+				  .setConnectTimeout(5000)
+				  .setConnectionRequestTimeout(5000)
+				  .build();
+		httpclient = HttpClients.custom().setDefaultRequestConfig(config)
+				.setConnectionManager(connectionManager).build();
 		
 		mapper = new ObjectMapper();
 		
-		badResult = new PriorityBlockingQueue<Map<String, Object>>(100, new Comparator<Map<String, Object>>() {
-
-			@SuppressWarnings("unchecked")
-			public int compare(Map<String, Object> o1, Map<String, Object> o2) {
-				if(o1.containsKey("bestFit") && o2.containsKey("bestFit")){
-					Map<String, Object> bad1 = (Map<String, Object>) o1.get("bestFit");
-					Map<String, Object> bad2 = (Map<String, Object>)o2.get("bestFit");
-					return (int) ((Double)bad1.get("rank") - (Double)bad2.get("rank"));
-				}
-				return 0;
-			}
-			
-		});
+		badResult = new ConcurrentHashMap<String, Vector<String>>();
+		badResult.put("badSearchList", new Vector<String>());
+		badResult.put("noPicList", new Vector<String>());
+		badResult.put("noLrcList", new Vector<String>());
 		
 		tcHunterThreadPool = Executors.newFixedThreadPool(threadPoolNumber);
 	}
@@ -68,8 +69,8 @@ public class App {
 	public static void main( String[] args ) throws IOException, InterruptedException {
         App app = new App();
         
-//        String path = "D:\\test\\";
-        String path = args[0];
+        String path = "D:\\test\\";
+//        String path = args[0];
         long begin = System.currentTimeMillis();
         int count = app.tcHuntAll(path);
         app.tcHunterThreadPool.shutdown(); 
@@ -86,6 +87,8 @@ public class App {
         logger.info("总耗时: "+duration/1000+" s");
         logger.info("扫描: "+count+" 首歌曲");
 //        logger.info("bad list: "+ app.badResult.size());
+        logger.info("noPicList list: "+ app.badResult.get("noPicList"));
+        logger.info("noLrcList list: "+ app.badResult.get("noLrcList"));
         
     }
 	

@@ -5,7 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.Vector;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -31,7 +31,7 @@ public class TcHunter implements Runnable {
 	
 	private CloseableHttpClient httpClient;
 	private ObjectMapper mapper;
-	private PriorityBlockingQueue<Map<String, Object>> badResult;
+	private Map<String, Vector<String>> badResult;
 	private String mp3file;
 
 	private Music163Api music163;
@@ -40,7 +40,7 @@ public class TcHunter implements Runnable {
 	private QQMusicApi qqMusic;
 	private KuwoApi kuwo;
 	
-	public TcHunter(CloseableHttpClient httpClient, ObjectMapper mapper, PriorityBlockingQueue<Map<String, Object>> badResult, String mp3file) {
+	public TcHunter(CloseableHttpClient httpClient, ObjectMapper mapper, Map<String, Vector<String>> badResult, String mp3file) {
 		super();
 		this.httpClient = httpClient;
 		this.mapper = mapper;
@@ -83,6 +83,10 @@ public class TcHunter implements Runnable {
 	 * @throws Exception
 	 */
 	public void downloadLrc() throws Exception {
+		String path = mp3file.substring(0, mp3file.lastIndexOf("."));
+		if (new File(path + ".lrc").exists()) {
+			return;
+		}
 		//get mp3info 
 		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
 		logger.info("mp3Info: " + mp3Info);
@@ -93,9 +97,8 @@ public class TcHunter implements Runnable {
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
 			logger.info("bestFit: " + best);
 			//download lrc
-			String path = mp3file.substring(0, mp3file.lastIndexOf("."));
 			String lyric = music163.getLyric(String.valueOf(best.get("id")));
-			if(StringUtil.isNotBlank(lyric) && !new File(path + ".lrc").exists()){
+			if(StringUtil.isNotBlank(lyric)){
 				IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
 				return;
 			}
@@ -107,21 +110,21 @@ public class TcHunter implements Runnable {
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
 			logger.info("bestFit: " + best);
 			//download lrc
-			String path = mp3file.substring(0, mp3file.lastIndexOf("."));
 			String lyric = baiduMusic.getLyric((String) best.get("lrc_url"));
-			if(StringUtil.isNotBlank(lyric) && !new File(path + ".lrc").exists()){
+			if(StringUtil.isNotBlank(lyric)){
 				IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
 				return;
 			}
 		}
 		//search dongting
 		//download lrc
-		String path = mp3file.substring(0, mp3file.lastIndexOf("."));
 		String lyric = dongting.getLyric((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("id"));
-		if(StringUtil.isNotBlank(lyric) && !new File(path + ".lrc").exists()){
+		if(StringUtil.isNotBlank(lyric)){
 			IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
 			return;
 		}
+		
+		badResult.get("noLrcList").add((String) mp3Info.get("title"));
 	}
 	
 	/**
@@ -132,6 +135,10 @@ public class TcHunter implements Runnable {
 		//get mp3info 
 		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
 		logger.info("mp3Info: " + mp3Info);
+		if ((boolean) mp3Info.get("has_album_pic")) {
+			return;
+		}
+		
 		TcMp3File file = new TcMp3File(mp3file);
 		//search music163
 		List<Map<String, Object>> searchResult = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
@@ -189,6 +196,8 @@ public class TcHunter implements Runnable {
 				return;
 			}
 		}
+		
+		badResult.get("noPicList").add((String) mp3Info.get("title"));
 	}
 	
 	/**
@@ -215,12 +224,9 @@ public class TcHunter implements Runnable {
 	//			logger.info(searchResult.get(i));
 	//		}
 			logger.info("bestFit: " + best);
-			//rank不足20分，则记录到badResult，并返回
+			//rank不足20分，则记录到badSearchList，并返回
 			if(badResult != null && (Double)best.get("rank") < 20){
-				Map<String, Object> bad = new HashMap<String, Object>();
-				bad.put("mp3Info", mp3Info);
-				bad.put("bestFit", best);
-				badResult.put(bad);
+				badResult.get("badSearchList").add((String) mp3Info.get("title"));
 				return;
 			}
 			
