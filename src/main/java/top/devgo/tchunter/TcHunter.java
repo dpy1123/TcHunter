@@ -137,18 +137,17 @@ public class TcHunter implements Runnable {
 				String lyric = music163.getLyric(String.valueOf(best.get("id")));
 				if(StringUtil.isNotBlank(lyric)){
 					IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
+					return;
 				}
-				break;
 			case BaiduMusicApi.API_ID:
 				lyric = baiduMusic.getLyric((String) best.get("lrc_url"));
 				if(StringUtil.isNotBlank(lyric)){
 					IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
+					return;
 				}
-				break;
 			default:
 				break;
 			}
-			return;
 		}
 		//search dongting
 		//download lrc
@@ -192,18 +191,20 @@ public class TcHunter implements Runnable {
 			case Music163Api.API_ID:
 				pic_url = (String) best.get("album_pic");
 				albumImageData = music163.downloadPic(pic_url);
-				break;
+				if (albumImageData != null) break;
 			case QQMusicApi.API_ID:
 				pic_url = (String) best.get("img_id");
 				albumImageData = qqMusic.downloadPic(pic_url);
-				break;
+				if (albumImageData != null) break;
 			case KuwoApi.API_ID:
 				pic_url = (String) best.get("artist_pic240");
 				albumImageData = kuwo.downloadPic(pic_url);
-				break;
+				if (albumImageData != null) break;
 			case BaiduMusicApi.API_ID:
 				pic_url = (String) best.get("album_pic_url");
 				albumImageData = baiduMusic.downloadPic(pic_url);
+				if (albumImageData != null) break;
+			default:
 				break;
 			}
 			if (albumImageData != null) {
