@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class Music163Api {
 	private static Logger logger = Logger.getLogger(Music163Api.class.getName());
+	public static final String API_ID = "Music163Api";
 	/**
 	 * 搜索最多返回条数，默认100
 	 */
@@ -49,7 +50,7 @@ public class Music163Api {
 	 * 
 	 * @param keywords
 	 * @return LinkedList<br> 
-     * Map={duration=264546, artist=angela, album=ZERO, album_pic=http://p4.music.126.net/-ru0sOeqEv4DtO3-_k0x-w==/2392537302068353.jpg,
+     * Map={api=Music163Api, duration=264546, artist=angela, album=ZERO, album_pic=http://p4.music.126.net/-ru0sOeqEv4DtO3-_k0x-w==/2392537302068353.jpg,
      *  id=26235098, title=僕じゃない, track=2/12}
 	 * @throws ClientProtocolException
 	 * @throws IOException
@@ -112,7 +113,7 @@ public class Music163Api {
 	/**
      * @param searchResult
      * @return LinkedList<br> 
-     * Map={duration=264546, artist=angela, album=ZERO, album_pic=http://p4.music.126.net/-ru0sOeqEv4DtO3-_k0x-w==/2392537302068353.jpg,
+     * Map={api=Music163Api, duration=264546, artist=angela, album=ZERO, album_pic=http://p4.music.126.net/-ru0sOeqEv4DtO3-_k0x-w==/2392537302068353.jpg,
      *  id=26235098, title=僕じゃない, track=2/12}
      */
     @SuppressWarnings("unchecked")
@@ -124,7 +125,7 @@ public class Music163Api {
 			Map<String, Object> result = (Map<String, Object>) searchResult.get("result");
 			List<Map<String, Object>> songs = (List<Map<String, Object>>) result.get("songs");//对null值进行强制转换后的返回值为null
 			if(songs == null){
-				return null;
+				return resultList;
 			}
 			logger.info("[网易云音乐]search results count: "+songs.size()+" of "+result.get("songCount"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
@@ -142,6 +143,7 @@ public class Music163Api {
 				String album_pic = (String) album.get("picUrl");
 				
 				Map<String, Object> mp3 = new HashMap<String, Object>();
+				mp3.put("api", API_ID);
 				mp3.put("title", song.get("name"));
 				mp3.put("id", song.get("id"));
 				mp3.put("track", song.get("position")+"/"+album_size);

@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BaiduMusicApi {
 	private static Logger logger = Logger.getLogger(BaiduMusicApi.class.getName());
+	public static final String API_ID = "BaiduMusicApi";
 	
 	private CloseableHttpClient httpclient;
 	private ObjectMapper mapper; 
@@ -42,7 +43,7 @@ public class BaiduMusicApi {
 	 * 
 	 * @param keywords
 	 * @return LinkedList<br> 
-     * Map={duration=264000, album_pic_url=http://musicdata.baidu.com/data2/pic/43742380/43742380.jpg, lrc_url=http://musicdata.baidu.com/data2/lrc/65445557/65445557.lrc, artist=angela, album=ZERO, id=51974213, title=僕じゃない}
+     * Map={api=BaiduMusicApi, duration=264000, album_pic_url=http://musicdata.baidu.com/data2/pic/43742380/43742380.jpg, lrc_url=http://musicdata.baidu.com/data2/lrc/65445557/65445557.lrc, artist=angela, album=ZERO, id=51974213, title=僕じゃない}
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
@@ -113,7 +114,7 @@ public class BaiduMusicApi {
 	/**
 	 * 
 	 * @param songId
-	 * @return {duration=264000, album_pic_url=http://musicdata.baidu.com/data2/pic/43742380/43742380.jpg, lrc_url=http://musicdata.baidu.com/data2/lrc/65445557/65445557.lrc, artist=angela, album=ZERO, id=51974213, title=僕じゃない}
+	 * @return {api=BaiduMusicApi, duration=264000, album_pic_url=http://musicdata.baidu.com/data2/pic/43742380/43742380.jpg, lrc_url=http://musicdata.baidu.com/data2/lrc/65445557/65445557.lrc, artist=angela, album=ZERO, id=51974213, title=僕じゃない}
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
@@ -162,9 +163,10 @@ public class BaiduMusicApi {
 		if(resultCode == 22000){
 			List<Map<String, Object>> songs = (List<Map<String, Object>>) ((Map<String, Object>)searchResult.get("data")).get("songList");//对null值进行强制转换后的返回值为null
 			if(songs == null || songs.size() < 1){
-				return null;
+				return mp3;
 			}
 			Map<String, Object> song = songs.get(0);
+			mp3.put("api", API_ID);
 			mp3.put("title", song.get("songName"));
 			mp3.put("id", song.get("songId"));
 			mp3.put("artist", song.get("artistName"));

@@ -1,4 +1,4 @@
-package top.devgo.tchunter;
+package top.devgo.tchunter.extend;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import com.mpatric.mp3agic.UnsupportedTagException;
  * @author dd
  *
  */
-class TcMp3File extends Mp3File {
+public class TcMp3File extends Mp3File {
 	public TcMp3File(String mp3file) throws UnsupportedTagException,
 			InvalidDataException, IOException {
 		super(mp3file);

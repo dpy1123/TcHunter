@@ -29,7 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class DongtingApi {
 	private static Logger logger = Logger.getLogger(DongtingApi.class.getName());
-	
+	public static final String API_ID = "DongtingApi";
 	/**
 	 * 搜索最多返回条数，默认100
 	 */
@@ -46,7 +46,7 @@ public class DongtingApi {
 	 * 查询歌曲信息，结果集很差而且没有排序的，eg:僕じゃない，就找不到歌手是angela的
 	 * @param keywords
 	 * @return LinkedList<br> 
-     * Map={duration=264546, artist=angela, album=ZERO, id=26235098, title=僕じゃない, track=2}
+     * Map={api=DongtingApi, duration=264546, artist=angela, album=ZERO, id=26235098, title=僕じゃない, track=2}
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
@@ -105,7 +105,7 @@ public class DongtingApi {
 	/**
      * @param searchResult
      * @return LinkedList<br> 
-     * Map={duration=264546, artist=angela, album=ZERO, id=26235098, title=僕じゃない, track=2}
+     * Map={api=DongtingApi, duration=264546, artist=angela, album=ZERO, id=26235098, title=僕じゃない, track=2}
      */
 	@SuppressWarnings("unchecked")
 	private List<Map<String, Object>> parseSearchResult(Map<String, Object> searchResult) {
@@ -115,11 +115,12 @@ public class DongtingApi {
 		if(resultCode == 1){
 			List<Map<String, Object>> songs = (List<Map<String, Object>>) searchResult.get("data");//对null值进行强制转换后的返回值为null
 			if(songs == null){
-				return null;
+				return resultList;
 			}
 			logger.info("[天天动听]search results count: "+songs.size()+" of "+searchResult.get("rows"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 				Map<String, Object> mp3 = new HashMap<String, Object>();
+				mp3.put("api", API_ID);
 				mp3.put("title", song.get("song_name"));
 				mp3.put("id", song.get("song_id"));
 				mp3.put("artist", song.get("singer_name"));

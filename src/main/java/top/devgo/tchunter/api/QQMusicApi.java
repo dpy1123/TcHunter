@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class QQMusicApi {
 	private static Logger logger = Logger.getLogger(QQMusicApi.class.getName());
+	public static final String API_ID = "QQMusicApi";
 	/**
 	 * 搜索最多返回条数，默认100
 	 */
@@ -41,7 +42,7 @@ public class QQMusicApi {
 	 * 
 	 * @param keywords
 	 * @return LinkedList<br> 
-     * Map={duration=264546, artist=angela, album=ZERO, id=26235098, title=僕じゃない}
+     * Map={api=QQMusicApi, duration=264546, artist=angela, album=ZERO, id=26235098, title=僕じゃない}
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
@@ -120,7 +121,7 @@ public class QQMusicApi {
 			Map<String, Object> result = (Map<String, Object>) (((Map<String, Object>)searchResult.get("data"))).get("song");
 			List<Map<String, Object>> songs = (List<Map<String, Object>>) result.get("list");//对null值进行强制转换后的返回值为null
 			if(songs == null){
-				return null;
+				return resultList;
 			}
 			logger.info("[QQ音乐]search results count: "+songs.size()+" of "+result.get("totalnum"));
 			for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
@@ -131,6 +132,7 @@ public class QQMusicApi {
 						Map<String, Object> mp3 = new HashMap<String, Object>();
 						//4810477|僕じゃない|12411|Angela|427696|ZERO|2282174|264|6|1|2|10587117|4234132|320000|0|0|0|6291201|6652667|0
 						//|004NXqYt3TEgWR|000oEvjV2FuRnP|001Vnlyn2eaGew|0|8013
+						mp3.put("api", API_ID);
 						mp3.put("title", fileds[1]);
 						mp3.put("artist", fileds[3]);
 						mp3.put("album", fileds[5]);

@@ -14,6 +14,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class App {
@@ -52,10 +53,13 @@ public class App {
 				  .setConnectTimeout(5000)
 				  .setConnectionRequestTimeout(5000)
 				  .build();
-		httpclient = HttpClients.custom().setDefaultRequestConfig(config)
+		httpclient = HttpClients.custom()
+//				.setDefaultRequestConfig(config)
 				.setConnectionManager(connectionManager).build();
 		
 		mapper = new ObjectMapper();
+		mapper.configure(Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true) ;  
+		mapper.configure(Feature.ALLOW_SINGLE_QUOTES, true);
 		
 		badResult = new ConcurrentHashMap<String, Vector<String>>();
 		badResult.put("badSearchList", new Vector<String>());

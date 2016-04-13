@@ -1,6 +1,7 @@
 package top.devgo.tchunter;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import top.devgo.tchunter.api.BaiduMusicApi;
@@ -18,6 +20,7 @@ import top.devgo.tchunter.api.DongtingApi;
 import top.devgo.tchunter.api.KuwoApi;
 import top.devgo.tchunter.api.Music163Api;
 import top.devgo.tchunter.api.QQMusicApi;
+import top.devgo.tchunter.extend.TcMp3File;
 import top.devgo.tchunter.util.IOUtil;
 import top.devgo.tchunter.util.StringUtil;
 
@@ -52,22 +55,56 @@ public class TcHunter implements Runnable {
 		dongting = new DongtingApi(httpClient, mapper);
 		qqMusic = new QQMusicApi(httpClient, mapper);
 		kuwo = new KuwoApi(httpClient, mapper);
+		
+		init();
 	}
 	
+	private Map<String, Object> mp3Info;
+	private List<Map<String, Object>> searchResult_music163;
+	private List<Map<String, Object>> searchResult_baiduMusic;
+	private List<Map<String, Object>> searchResult_dongting;
+	private List<Map<String, Object>> searchResult_qqMusic;
+	private List<Map<String, Object>> searchResult_kuwo;
+	
+	private void init() {
+		//get mp3info 
+		try {
+			mp3Info = Mp3Helper.getMp3Info(mp3file);
+		} catch (Exception e) {
+			logger.error("获取"+mp3file+"信息失败", e);
+		}
+		logger.info("mp3Info: " + mp3Info);
+		//search
+		try {
+			searchResult_music163 = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
+			searchResult_baiduMusic = baiduMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
+			searchResult_dongting = dongting.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
+			searchResult_qqMusic = qqMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
+			searchResult_kuwo = kuwo.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
+		} catch (Exception e) {
+			logger.error("search "+mp3file+"失败", e);
+		}
+	}
+
 	/**
 	 * 更新歌曲信息
 	 * @throws Exception
 	 */
 	public void updateMp3Info() throws Exception {
-		//get mp3info 
-		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
-		logger.info("mp3Info: " + mp3Info);
-		//search
-		List<Map<String, Object>> searchResult = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
-		searchResult.addAll(baiduMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album")));
-		searchResult.addAll(dongting.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album")));
-		searchResult.addAll(qqMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album")));
-		searchResult.addAll(kuwo.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album")));
+		List<Map<String, Object>> searchResult = new ArrayList<Map<String,Object>>(searchResult_music163);
+		if (searchResult_baiduMusic != null) {
+			searchResult.addAll(searchResult_baiduMusic);
+		}
+		if (searchResult_dongting != null) {
+			searchResult.addAll(searchResult_dongting);
+		}
+		if (searchResult_qqMusic != null) {
+			searchResult.addAll(searchResult_qqMusic);
+		}
+		if (searchResult_kuwo != null) {
+			searchResult.addAll(searchResult_kuwo);
+		}
+			
 		if(searchResult != null &&searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
@@ -79,7 +116,7 @@ public class TcHunter implements Runnable {
 	}
 	
 	/**
-	 * 下载歌词，优先级： 网易163->百度云音乐->天天动听
+	 * 下载歌词，选择 网易163->百度云音乐 中最优的，天天动听补充
 	 * @throws Exception
 	 */
 	public void downloadLrc() throws Exception {
@@ -87,34 +124,31 @@ public class TcHunter implements Runnable {
 		if (new File(path + ".lrc").exists()) {
 			return;
 		}
-		//get mp3info 
-		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
-		logger.info("mp3Info: " + mp3Info);
-		//search music163
-		List<Map<String, Object>> searchResult = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
+		//search music163 baiduMusic dongting
+		List<Map<String, Object>> searchResult = new ArrayList<Map<String,Object>>(searchResult_music163);
+		searchResult.addAll(searchResult_baiduMusic);
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
 			logger.info("bestFit: " + best);
 			//download lrc
-			String lyric = music163.getLyric(String.valueOf(best.get("id")));
-			if(StringUtil.isNotBlank(lyric)){
-				IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
-				return;
+			switch ((String)best.get("api")) {
+			case Music163Api.API_ID:
+				String lyric = music163.getLyric(String.valueOf(best.get("id")));
+				if(StringUtil.isNotBlank(lyric)){
+					IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
+				}
+				break;
+			case BaiduMusicApi.API_ID:
+				lyric = baiduMusic.getLyric((String) best.get("lrc_url"));
+				if(StringUtil.isNotBlank(lyric)){
+					IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
+				}
+				break;
+			default:
+				break;
 			}
-		}
-		//search baiduMusic
-		searchResult = baiduMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
-		if(searchResult != null && searchResult.size() > 0) {
-			//get bestfit
-			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			logger.info("bestFit: " + best);
-			//download lrc
-			String lyric = baiduMusic.getLyric((String) best.get("lrc_url"));
-			if(StringUtil.isNotBlank(lyric)){
-				IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
-				return;
-			}
+			return;
 		}
 		//search dongting
 		//download lrc
@@ -128,70 +162,52 @@ public class TcHunter implements Runnable {
 	}
 	
 	/**
-	 * 更新图片，优先级： 网易163->qq音乐->酷我->百度云音乐
+	 * 更新图片，选择 网易163->qq音乐->酷我->百度云音乐 中最优的
 	 * @throws Exception
 	 */
 	public void updateAlbumPic() throws Exception {
-		//get mp3info 
-		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
-		logger.info("mp3Info: " + mp3Info);
 		if ((boolean) mp3Info.get("has_album_pic")) {
 			return;
 		}
 		
-		TcMp3File file = new TcMp3File(mp3file);
-		//search music163
-		List<Map<String, Object>> searchResult = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
-		if(searchResult != null && searchResult.size() > 0) {
-			//get bestfit
-			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			logger.info("bestFit: " + best);
-			//add album_pic
-			String pic_url = (String) best.get("album_pic");//http://p3.music.126.net/FtUrdiJ_4xqA9r24cVPzpA==/730075720865799.jpg
-			byte[] albumImageData = music163.downloadPic(pic_url);
-			if (albumImageData != null) {
-				Mp3Helper.updateAlbumImg(file, albumImageData, getMimeType(pic_url));
-				return;
-			}
+		List<Map<String, Object>> searchResult = new ArrayList<Map<String,Object>>(searchResult_music163);
+		if (searchResult_baiduMusic != null) {
+			searchResult.addAll(searchResult_baiduMusic);
 		}
-		//search qqMusic
-		searchResult = qqMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
-		if(searchResult != null && searchResult.size() > 0) {
-			//get bestfit
-			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			logger.info("bestFit: " + best);
-			//add album_pic
-			String pic_url = (String) best.get("img_id");
-			byte[] albumImageData = qqMusic.downloadPic(pic_url);
-			if (albumImageData != null) {
-				Mp3Helper.updateAlbumImg(file, albumImageData, getMimeType(pic_url));
-				return;
-			}
+		if (searchResult_qqMusic != null) {
+			searchResult.addAll(searchResult_qqMusic);
 		}
-		//search kuwo
-		searchResult = kuwo.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
-		if(searchResult != null && searchResult.size() > 0) {
-			//get bestfit
-			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-			logger.info("bestFit: " + best);
-			//add album_pic
-			String pic_url = (String) best.get("artist_pic240");
-			byte[] albumImageData = kuwo.downloadPic(pic_url);
-			if (albumImageData != null) {
-				Mp3Helper.updateAlbumImg(file, albumImageData, getMimeType(pic_url));
-				return;
-			}
+		if (searchResult_kuwo != null) {
+			searchResult.addAll(searchResult_kuwo);
 		}
-		//search baiduMusic
-		searchResult = baiduMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
+		
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
 			logger.info("bestFit: " + best);
 			//add album_pic
-			String pic_url = (String) best.get("album_pic_url");
-			byte[] albumImageData = baiduMusic.downloadPic(pic_url);
+			byte[] albumImageData = null;
+			String pic_url = null;
+			switch ((String)best.get("api")) {
+			case Music163Api.API_ID:
+				pic_url = (String) best.get("album_pic");
+				albumImageData = music163.downloadPic(pic_url);
+				break;
+			case QQMusicApi.API_ID:
+				pic_url = (String) best.get("img_id");
+				albumImageData = qqMusic.downloadPic(pic_url);
+				break;
+			case KuwoApi.API_ID:
+				pic_url = (String) best.get("artist_pic240");
+				albumImageData = kuwo.downloadPic(pic_url);
+				break;
+			case BaiduMusicApi.API_ID:
+				pic_url = (String) best.get("album_pic_url");
+				albumImageData = baiduMusic.downloadPic(pic_url);
+				break;
+			}
 			if (albumImageData != null) {
+				TcMp3File file = new TcMp3File(mp3file);
 				Mp3Helper.updateAlbumImg(file, albumImageData, getMimeType(pic_url));
 				return;
 			}
@@ -295,7 +311,11 @@ public class TcHunter implements Runnable {
 			public int compare(Map<String, Object> o1, Map<String, Object> o2) {
 				double a = (Double) o1.get("rank");
 				double b = (Double) o2.get("rank");
-				return a > b ? -1:1;
+//				return a > b ? -1:1;//【注意】JDK7中的Collections.Sort方法实现TimSort中，如果两个值是相等的，那么compare方法需要返回0，否则 可能 会在排序时抛错
+				if (a == b)
+					return 0;
+				else
+					return a > b ? -1 : 1;
 			}
 		});
     	//get top 1
@@ -350,7 +370,10 @@ public class TcHunter implements Runnable {
 	public static void main(String[] args) throws Exception {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		ObjectMapper mapper = new ObjectMapper();
-		String mp3file = "D:\\test\\Fallen.mp3";
+		mapper.configure(Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true) ;  
+		mapper.configure(Feature.ALLOW_SINGLE_QUOTES, true);
+		
+		String mp3file = "D:\\test\\Start Line _ 涼風 _ COACH☆.mp3";
 		
 		TcHunter hunter = new TcHunter(httpClient, mapper, null, mp3file);
 		hunter.updateMp3Info();

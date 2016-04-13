@@ -12,8 +12,13 @@
 * 备份一下你的mp3文件或文件夹，并删除已有的错误的lrc文件。  
 * builds文件夹下已有build好的jar包，使用方式：    
   `java -jar TCHunter.jar 文件或目录`
+* 执行结束会输出noPicList和noLrcList，分别给出了找不到图片或歌词的mp3列表。
 
 
 # Further Improvements 
 * 任务异常时的处理。  
-* 优化搜索图词的关键字抽取。
+    * 访问search.kuwo.cn有时候会Connection timed out, 默认连接超时时间是5s，如发生超时可以再次运行程序。
+    * Api.searchMusic在parseJsonResult的时候有时候会因含有非法字符报错，暂时在只发现酷我的某些搜索结果格式不干净。
+* 优化搜索图词的关键字抽取。  
+    搜索结果的好坏依赖各家的API，因此这里应该尽可能用意义明确的搜索关键字。  
+    目前的搜索关键字是title artist album。title选择顺序：文件名->id3v2中的title，其他的信来自id3v2tag。  

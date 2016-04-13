@@ -4,11 +4,12 @@
 
 	<groupId>top.devgo</groupId>
 	<artifactId>TCHunter</artifactId>
-	<version>0.1</version>
+	<version>0.2</version>
 	<packaging>jar</packaging>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<jackson.version>2.7.3</jackson.version>
 	</properties>
 
 	<dependencies>
@@ -31,12 +32,12 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.6.4</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-xml</artifactId>
-			<version>2.6.4</version>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.woodstox</groupId>
@@ -56,7 +57,7 @@
 		</dependency>
 		
 		<dependency>
-            <groupId>chardet</groupId>
+            <groupId>net.sourceforge.jchardet</groupId>
             <artifactId>jchardet</artifactId>
             <version>1.1</version>
             <scope>system</scope>

@@ -26,7 +26,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 public class KuwoApi {
 	private static Logger logger = Logger.getLogger(KuwoApi.class.getName());
-	
+	public static final String API_ID = "KuwoApi";
 	/**
 	 * 搜索最多返回条数，默认100
 	 */
@@ -38,8 +38,6 @@ public class KuwoApi {
 	public KuwoApi(CloseableHttpClient httpclient, ObjectMapper mapper) {
 		this.httpclient = httpclient;
 		this.mapper = mapper;
-		mapper.configure(Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true) ;  
-		mapper.configure(Feature.ALLOW_SINGLE_QUOTES, true);
 	}
 	
 	
@@ -47,7 +45,7 @@ public class KuwoApi {
 	 * 
 	 * @param keywords
 	 * @return LinkedList<br> 
-     * Map={duration=264546, artist=angela, album=ZERO, id=26235098, title=僕じゃない}
+     * Map={api=KuwoApi, duration=264546, artist=angela, album=ZERO, id=26235098, title=僕じゃない}
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
@@ -115,11 +113,12 @@ public class KuwoApi {
     	
 		List<Map<String, Object>> songs = (List<Map<String, Object>>) searchResult.get("abslist");//对null值进行强制转换后的返回值为null
 		if(songs == null){
-			return null;
+			return resultList;
 		}
 		logger.info("[酷我音乐]search results count: "+songs.size()+" of "+searchResult.get("TOTAL"));
 		for (Map<String, Object> song : songs) {//foreach也要对songs进行null判断，否则会报错
 			Map<String, Object> mp3 = new HashMap<String, Object>();
+			mp3.put("api", API_ID);
 			mp3.put("title", song.get("NAME"));
 			mp3.put("id", song.get("MUSICRID"));
 			mp3.put("artist", song.get("ARTIST"));
@@ -161,7 +160,9 @@ public class KuwoApi {
 			}
 		}
 		//parse result
-		jsonResult = jsonResult.replaceAll("=", "").replaceAll("&", "");
+		if(StringUtil.isNotBlank(jsonResult)){
+			jsonResult = jsonResult.replaceAll("=", "").replaceAll("&", "");
+		}
 		ObjectMapper xmlMapper = new XmlMapper();
 		Map<String, Object> searchResult = xmlMapper.readValue(jsonResult, new TypeReference<Map<String, Object>>() { } );
 		return searchResult;
@@ -189,7 +190,10 @@ public class KuwoApi {
 	
 	
 	public static void main(String[] args) throws ClientProtocolException, IOException {
-		System.out.println(new KuwoApi(HttpClients.createDefault(), new ObjectMapper()).searchMusic("僕じゃない"));
-		System.out.println(new KuwoApi(HttpClients.createDefault(), new ObjectMapper()).getMusicInfo("MUSIC_3341247").get("artist_pic240"));
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true) ;  
+		mapper.configure(Feature.ALLOW_SINGLE_QUOTES, true);
+		System.out.println(new KuwoApi(HttpClients.createDefault(), mapper).searchMusic("僕じゃない"));
+//		System.out.println(new KuwoApi(HttpClients.createDefault(), mapper).getMusicInfo("MUSIC_3341247").get("artist_pic240"));
 	}
 }

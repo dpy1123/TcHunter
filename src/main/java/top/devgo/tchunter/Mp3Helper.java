@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import top.devgo.tchunter.extend.TcMp3File;
 import top.devgo.tchunter.util.StringUtil;
 
 import com.mpatric.mp3agic.ID3v1;
