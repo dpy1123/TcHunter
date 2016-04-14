@@ -63,6 +63,7 @@ public class App {
 		
 		badResult = new ConcurrentHashMap<String, Vector<String>>();
 		badResult.put("badSearchList", new Vector<String>());
+		badResult.put("errorList", new Vector<String>());
 		badResult.put("noPicList", new Vector<String>());
 		badResult.put("noLrcList", new Vector<String>());
 		
@@ -73,7 +74,7 @@ public class App {
 	public static void main( String[] args ) throws IOException, InterruptedException {
         App app = new App();
         
-        String path = "D:\\test\\";
+        String path = "D:\\test\\WHITE ALBUM 2 OST";
 //        String path = args[0];
         long begin = System.currentTimeMillis();
         int count = app.tcHuntAll(path);
@@ -90,9 +91,10 @@ public class App {
         long duration = System.currentTimeMillis() - begin;
         logger.info("总耗时: "+duration/1000+" s");
         logger.info("扫描: "+count+" 首歌曲");
-//        logger.info("bad list: "+ app.badResult.size());
-        logger.info("noPicList list: "+ app.badResult.get("noPicList"));
-        logger.info("noLrcList list: "+ app.badResult.get("noLrcList"));
+        logger.info("badSearchList : "+ app.badResult.get("badSearchList"));
+        logger.info("errorList : "+ app.badResult.get("errorList"));
+        logger.info("noPicList : "+ app.badResult.get("noPicList"));
+        logger.info("noLrcList : "+ app.badResult.get("noLrcList"));
         
     }
 	

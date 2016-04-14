@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -55,8 +56,6 @@ public class TcHunter implements Runnable {
 		dongting = new DongtingApi(httpClient, mapper);
 		qqMusic = new QQMusicApi(httpClient, mapper);
 		kuwo = new KuwoApi(httpClient, mapper);
-		
-		init();
 	}
 	
 	private Map<String, Object> mp3Info;
@@ -109,6 +108,11 @@ public class TcHunter implements Runnable {
 			//get bestfit
 			Map<String, Object> best = getBestFit(searchResult, mp3Info);
 			logger.info("bestFit: " + best);
+			//rank不足20分，则记录到badSearchList，并返回
+			if((Double)best.get("rank") < 20){
+				badResult.get("badSearchList").add((String) mp3Info.get("title"));
+				return;
+			}
 			//update mp3info
 			TcMp3File file = new TcMp3File(mp3file);
 			Mp3Helper.updateMp3Info(file, best);
@@ -165,7 +169,7 @@ public class TcHunter implements Runnable {
 	 * @throws Exception
 	 */
 	public void updateAlbumPic() throws Exception {
-		if ((boolean) mp3Info.get("has_album_pic")) {
+		if (mp3Info.containsKey("has_album_pic") && (boolean) mp3Info.get("has_album_pic")) {
 			return;
 		}
 		
@@ -360,11 +364,13 @@ public class TcHunter implements Runnable {
 	public void run() {
 		try {
 //			tcHunt();
+			init();
 			updateMp3Info();
 			downloadLrc();
 			updateAlbumPic();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("处理过程中发生错误", e);
+			badResult.get("errorList").add((String) mp3Info.get("title"));
 		}
 	}
 	
@@ -374,11 +380,15 @@ public class TcHunter implements Runnable {
 		mapper.configure(Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true) ;  
 		mapper.configure(Feature.ALLOW_SINGLE_QUOTES, true);
 		
-		String mp3file = "D:\\test\\Start Line _ 涼風 _ COACH☆.mp3";
+		String mp3file = "D:\\test\\13.深愛.mp3";
 		
-		TcHunter hunter = new TcHunter(httpClient, mapper, null, mp3file);
-		hunter.updateMp3Info();
-		hunter.downloadLrc();
-		hunter.updateAlbumPic();
+		ConcurrentHashMap<String, Vector<String>> badResult = new ConcurrentHashMap<String, Vector<String>>();
+		badResult.put("badSearchList", new Vector<String>());
+		badResult.put("errorList", new Vector<String>());
+		badResult.put("noPicList", new Vector<String>());
+		badResult.put("noLrcList", new Vector<String>());
+		
+		TcHunter hunter = new TcHunter(httpClient, mapper, badResult, mp3file);
+		hunter.run();
 	}
 }
