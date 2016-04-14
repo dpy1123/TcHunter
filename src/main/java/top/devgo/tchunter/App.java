@@ -116,26 +116,16 @@ public class App {
 				}else{
 					String extension = filename.substring(filename.lastIndexOf(".")+1);
 					if ("mp3".equals(extension.toLowerCase())) {
-						try {
-							tcHunt(filename);
-							count++;
-						} catch (Exception e) {
-							e.printStackTrace();
-							logger.error("处理["+filename+"]报错: "+e.getMessage(), e);
-						}
+						tcHunt(filename);
+						count++;
 					}
 				}
 			}
         }else{
         	String extension = path.substring(path.lastIndexOf(".")+1);
         	if ("mp3".equals(extension.toLowerCase())) {
-        		try {
-        			tcHunt(path);
-        			count++;
-        		} catch (Exception e) {
-        			e.printStackTrace();
-        			logger.error("处理["+path+"]报错: "+e.getMessage(), e);
-        		}
+    			tcHunt(path);
+    			count++;
         	}
         }
 		return count;
