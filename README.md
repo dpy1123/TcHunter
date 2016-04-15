@@ -12,7 +12,10 @@
 * 备份一下你的mp3文件或文件夹，并删除已有的错误的lrc文件。  
 * builds文件夹下已有build好的jar包(需要jdk 1.8)，使用方式：    
   `java -jar TCHunter.jar 文件或目录`
-* 执行结束会输出noPicList和noLrcList，分别给出了找不到图片或歌词的mp3列表。
+* 执行结束会输出  
+  errorList记录出错的列表，一般是资源找不到。  
+  badSearchList是匹配度得分低于20的列表，往往搜到的图词可能是错误的。  
+  noPicList和noLrcList，分别给出了找不到图片或歌词的mp3列表。
 
 
 # Further Improvements 
