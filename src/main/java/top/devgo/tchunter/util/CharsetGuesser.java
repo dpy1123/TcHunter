@@ -5,6 +5,11 @@ import java.io.ByteArrayInputStream;
 import org.mozilla.intl.chardet.nsDetector;
 import org.mozilla.intl.chardet.nsICharsetDetectionObserver;
 
+/**
+ * 封装了Mozilla组织提供的JChardet
+ * @author dd
+ *
+ */
 class CharsetGuesser {
 	private String result = null;
 	private boolean found = false;
@@ -62,4 +67,8 @@ class CharsetGuesser {
 		return result;
 	}
 	
+	
+	public static void main(String[] args) {
+		System.out.println(new CharsetGuesser().guess("好き".getBytes(), 6));;
+	}
 }

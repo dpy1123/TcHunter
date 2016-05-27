@@ -63,6 +63,18 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/libs/chardet.jar</systemPath>
 		</dependency>
+		<dependency>
+            <groupId>info.monitorenter.cpdetector</groupId>
+            <artifactId>cpdetector</artifactId>
+            <version>1.0.10</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/cpdetector_1.0.10.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>antlr</groupId>
+			<artifactId>antlr</artifactId>
+			<version>2.7.7</version>
+		</dependency>
 	</dependencies>
 	
 	<build>
