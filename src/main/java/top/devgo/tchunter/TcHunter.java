@@ -24,7 +24,6 @@ import top.devgo.tchunter.api.QQMusicApi;
 import top.devgo.tchunter.file.FlacOper;
 import top.devgo.tchunter.file.Mp3Oper;
 import top.devgo.tchunter.file.MusicFileOper;
-import top.devgo.tchunter.file.extend.TcMp3File;
 import top.devgo.tchunter.util.IOUtil;
 import top.devgo.tchunter.util.StringUtil;
 
@@ -36,8 +35,6 @@ import top.devgo.tchunter.util.StringUtil;
 public class TcHunter implements Runnable {
 	private static Logger logger = Logger.getLogger(TcHunter.class.getName());
 	
-	private CloseableHttpClient httpClient;
-	private ObjectMapper mapper;
 	private Map<String, Vector<String>> badResult;
 	private String filePath;
 	private MusicFileOper musicFileOper;
@@ -50,8 +47,6 @@ public class TcHunter implements Runnable {
 	
 	public TcHunter(CloseableHttpClient httpClient, ObjectMapper mapper, Map<String, Vector<String>> badResult, String filePath) {
 		super();
-		this.httpClient = httpClient;
-		this.mapper = mapper;
 		this.badResult = badResult;
 		this.filePath = filePath;
 		
@@ -61,7 +56,7 @@ public class TcHunter implements Runnable {
     		this.musicFileOper = new Mp3Oper();
     	}else if ("flac".equalsIgnoreCase(extension)) {
     		this.musicFileOper = new FlacOper();
-		}
+    	}
 		
 		music163 = new Music163Api(httpClient, mapper);
 		baiduMusic = new BaiduMusicApi(httpClient, mapper);
@@ -83,6 +78,7 @@ public class TcHunter implements Runnable {
         	musicInfo = musicFileOper.getInfo(filePath);
 		} catch (Exception e) {
 			logger.error("获取"+filePath+"信息失败", e);
+			return;
 		}
 		logger.info("musicInfo: " + musicInfo);
 		//search
@@ -102,7 +98,10 @@ public class TcHunter implements Runnable {
 	 * @throws Exception
 	 */
 	public void updateMusicInfo() throws Exception {
-		List<Map<String, Object>> searchResult = new ArrayList<Map<String,Object>>(searchResult_music163);
+		List<Map<String, Object>> searchResult = new ArrayList<Map<String,Object>>();
+		if (searchResult_music163 != null) {
+			searchResult.addAll(searchResult_music163);
+		}
 		if (searchResult_baiduMusic != null) {
 			searchResult.addAll(searchResult_baiduMusic);
 		}
@@ -180,11 +179,14 @@ public class TcHunter implements Runnable {
 	 * @throws Exception
 	 */
 	public void updateAlbumPic() throws Exception {
-		if (musicInfo.containsKey("has_album_pic") && (boolean) musicInfo.get("has_album_pic")) {
+		if (musicInfo==null || musicInfo.containsKey("has_album_pic") && (boolean) musicInfo.get("has_album_pic")) {
 			return;
 		}
 		
-		List<Map<String, Object>> searchResult = new ArrayList<Map<String,Object>>(searchResult_music163);
+		List<Map<String, Object>> searchResult = new ArrayList<Map<String,Object>>();
+		if (searchResult_music163 != null) {
+			searchResult.addAll(searchResult_music163);
+		}
 		if (searchResult_baiduMusic != null) {
 			searchResult.addAll(searchResult_baiduMusic);
 		}
