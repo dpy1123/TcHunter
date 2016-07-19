@@ -21,7 +21,10 @@ import top.devgo.tchunter.api.DongtingApi;
 import top.devgo.tchunter.api.KuwoApi;
 import top.devgo.tchunter.api.Music163Api;
 import top.devgo.tchunter.api.QQMusicApi;
-import top.devgo.tchunter.extend.TcMp3File;
+import top.devgo.tchunter.file.FlacOper;
+import top.devgo.tchunter.file.Mp3Oper;
+import top.devgo.tchunter.file.MusicFileOper;
+import top.devgo.tchunter.file.extend.TcMp3File;
 import top.devgo.tchunter.util.IOUtil;
 import top.devgo.tchunter.util.StringUtil;
 
@@ -36,7 +39,8 @@ public class TcHunter implements Runnable {
 	private CloseableHttpClient httpClient;
 	private ObjectMapper mapper;
 	private Map<String, Vector<String>> badResult;
-	private String mp3file;
+	private String filePath;
+	private MusicFileOper musicFileOper;
 
 	private Music163Api music163;
 	private BaiduMusicApi baiduMusic;
@@ -44,12 +48,20 @@ public class TcHunter implements Runnable {
 	private QQMusicApi qqMusic;
 	private KuwoApi kuwo;
 	
-	public TcHunter(CloseableHttpClient httpClient, ObjectMapper mapper, Map<String, Vector<String>> badResult, String mp3file) {
+	public TcHunter(CloseableHttpClient httpClient, ObjectMapper mapper, Map<String, Vector<String>> badResult, String filePath) {
 		super();
 		this.httpClient = httpClient;
 		this.mapper = mapper;
 		this.badResult = badResult;
-		this.mp3file = mp3file;
+		this.filePath = filePath;
+		
+		
+		String extension = filePath.substring(filePath.lastIndexOf('.')+1);
+    	if ("mp3".equalsIgnoreCase(extension)) {
+    		this.musicFileOper = new Mp3Oper();
+    	}else if ("flac".equalsIgnoreCase(extension)) {
+    		this.musicFileOper = new FlacOper();
+		}
 		
 		music163 = new Music163Api(httpClient, mapper);
 		baiduMusic = new BaiduMusicApi(httpClient, mapper);
@@ -58,7 +70,7 @@ public class TcHunter implements Runnable {
 		kuwo = new KuwoApi(httpClient, mapper);
 	}
 	
-	private Map<String, Object> mp3Info;
+	private Map<String, Object> musicInfo;
 	private List<Map<String, Object>> searchResult_music163;
 	private List<Map<String, Object>> searchResult_baiduMusic;
 	private List<Map<String, Object>> searchResult_dongting;
@@ -66,22 +78,22 @@ public class TcHunter implements Runnable {
 	private List<Map<String, Object>> searchResult_kuwo;
 	
 	private void init() {
-		//get mp3info 
+		//get musicInfo 
 		try {
-			mp3Info = Mp3Helper.getMp3Info(mp3file);
+        	musicInfo = musicFileOper.getInfo(filePath);
 		} catch (Exception e) {
-			logger.error("获取"+mp3file+"信息失败", e);
+			logger.error("获取"+filePath+"信息失败", e);
 		}
-		logger.info("mp3Info: " + mp3Info);
+		logger.info("musicInfo: " + musicInfo);
 		//search
 		try {
-			searchResult_music163 = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
-			searchResult_baiduMusic = baiduMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
-			searchResult_dongting = dongting.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
-			searchResult_qqMusic = qqMusic.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
-			searchResult_kuwo = kuwo.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
+			searchResult_music163 = music163.searchMusic((String)musicInfo.get("title"), (String)musicInfo.get("artist"), (String)musicInfo.get("album"));
+			searchResult_baiduMusic = baiduMusic.searchMusic((String)musicInfo.get("title"), (String)musicInfo.get("artist"), (String)musicInfo.get("album"));
+			searchResult_dongting = dongting.searchMusic((String)musicInfo.get("title"), (String)musicInfo.get("artist"), (String)musicInfo.get("album"));
+			searchResult_qqMusic = qqMusic.searchMusic((String)musicInfo.get("title"), (String)musicInfo.get("artist"), (String)musicInfo.get("album"));
+			searchResult_kuwo = kuwo.searchMusic((String)musicInfo.get("title"), (String)musicInfo.get("artist"), (String)musicInfo.get("album"));
 		} catch (Exception e) {
-			logger.error("search "+mp3file+"失败", e);
+			logger.error("search "+filePath+" 失败", e);
 		}
 	}
 
@@ -89,7 +101,7 @@ public class TcHunter implements Runnable {
 	 * 更新歌曲信息
 	 * @throws Exception
 	 */
-	public void updateMp3Info() throws Exception {
+	public void updateMusicInfo() throws Exception {
 		List<Map<String, Object>> searchResult = new ArrayList<Map<String,Object>>(searchResult_music163);
 		if (searchResult_baiduMusic != null) {
 			searchResult.addAll(searchResult_baiduMusic);
@@ -106,16 +118,15 @@ public class TcHunter implements Runnable {
 			
 		if(searchResult != null &&searchResult.size() > 0) {
 			//get bestfit
-			Map<String, Object> best = getBestFit(searchResult, mp3Info);
+			Map<String, Object> best = getBestFit(searchResult, musicInfo);
 			logger.info("bestFit: " + best);
 			//rank不足20分，则记录到badSearchList，并返回
 			if((Double)best.get("rank") < 20){
-				badResult.get("badSearchList").add((String) mp3Info.get("title"));
+				badResult.get("badSearchList").add((String) musicInfo.get("title"));
 				return;
 			}
-			//update mp3info
-			TcMp3File file = new TcMp3File(mp3file);
-			Mp3Helper.updateMp3Info(file, best);
+			//update musicInfo
+        	musicFileOper.updateInfo(filePath, best);
 		}
 	}
 	
@@ -124,7 +135,7 @@ public class TcHunter implements Runnable {
 	 * @throws Exception
 	 */
 	public void downloadLrc() throws Exception {
-		String path = mp3file.substring(0, mp3file.lastIndexOf("."));
+		String path = filePath.substring(0, filePath.lastIndexOf("."));
 		if (new File(path + ".lrc").exists()) {
 			return;
 		}
@@ -133,7 +144,7 @@ public class TcHunter implements Runnable {
 		searchResult.addAll(searchResult_baiduMusic);
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
-			Map<String, Object> best = getBestFit(searchResult, mp3Info);
+			Map<String, Object> best = getBestFit(searchResult, musicInfo);
 			logger.info("bestFit: " + best);
 			//download lrc
 			switch ((String)best.get("api")) {
@@ -155,13 +166,13 @@ public class TcHunter implements Runnable {
 		}
 		//search dongting
 		//download lrc
-		String lyric = dongting.getLyric((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("id"));
+		String lyric = dongting.getLyric((String)musicInfo.get("title"), (String)musicInfo.get("artist"), (String)musicInfo.get("id"));
 		if(StringUtil.isNotBlank(lyric)){
 			IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
 			return;
 		}
 		
-		badResult.get("noLrcList").add((String) mp3Info.get("title"));
+		badResult.get("noLrcList").add((String) musicInfo.get("title"));
 	}
 	
 	/**
@@ -169,7 +180,7 @@ public class TcHunter implements Runnable {
 	 * @throws Exception
 	 */
 	public void updateAlbumPic() throws Exception {
-		if (mp3Info.containsKey("has_album_pic") && (boolean) mp3Info.get("has_album_pic")) {
+		if (musicInfo.containsKey("has_album_pic") && (boolean) musicInfo.get("has_album_pic")) {
 			return;
 		}
 		
@@ -186,7 +197,7 @@ public class TcHunter implements Runnable {
 		
 		if(searchResult != null && searchResult.size() > 0) {
 			//get bestfit
-			Map<String, Object> best = getBestFit(searchResult, mp3Info);
+			Map<String, Object> best = getBestFit(searchResult, musicInfo);
 			logger.info("bestFit: " + best);
 			//add album_pic
 			byte[] albumImageData = null;
@@ -212,63 +223,14 @@ public class TcHunter implements Runnable {
 				break;
 			}
 			if (albumImageData != null) {
-				TcMp3File file = new TcMp3File(mp3file);
-				Mp3Helper.updateAlbumImg(file, albumImageData, getMimeType(pic_url));
+				musicFileOper.updateAlbumImg(filePath, albumImageData, getMimeType(pic_url));
 				return;
 			}
 		}
 		
-		badResult.get("noPicList").add((String) mp3Info.get("title"));
+		badResult.get("noPicList").add((String) musicInfo.get("title"));
 	}
 	
-	/**
-	 * 更新歌曲信息与图词信息，只使用网易云api
-	 * @throws Exception
-	 */
-	@Deprecated
-	public void tcHunt() throws Exception {
-		String extension = mp3file.substring(mp3file.lastIndexOf(".")+1);
-		if(!"mp3".equals(extension.toLowerCase())){
-			throw new IllegalArgumentException("暂时只接受mp3文件!");
-		}
-		
-		Music163Api music163 = new Music163Api(httpClient, mapper);
-		//get mp3info 
-		Map<String, Object> mp3Info = Mp3Helper.getMp3Info(mp3file);
-		logger.info("mp3Info: "+mp3Info);
-		//search
-		List<Map<String, Object>> searchResult = music163.searchMusic((String)mp3Info.get("title"), (String)mp3Info.get("artist"), (String)mp3Info.get("album"));
-		if(searchResult != null && searchResult.size() > 0) {
-			//get bestfit
-			Map<String, Object> best = getBestFit(searchResult, mp3Info);
-	//		for (int i = 0; i < searchResult.size(); i++) {
-	//			logger.info(searchResult.get(i));
-	//		}
-			logger.info("bestFit: " + best);
-			//rank不足20分，则记录到badSearchList，并返回
-			if(badResult != null && (Double)best.get("rank") < 20){
-				badResult.get("badSearchList").add((String) mp3Info.get("title"));
-				return;
-			}
-			
-			//download lrc
-			String path = mp3file.substring(0, mp3file.lastIndexOf("."));
-			String lyric = music163.getLyric(String.valueOf(best.get("id")));
-			if(StringUtil.isNotBlank(lyric) && !new File(path + ".lrc").exists()){
-				IOUtil.Writer(path + ".lrc", IOUtil.UTF8, lyric);
-			}
-			//update mp3info
-			TcMp3File file = new TcMp3File(mp3file);
-			Mp3Helper.updateMp3Info(file, best);
-			//add album_pic
-			String pic_url = (String) best.get("album_pic");//http://p3.music.126.net/FtUrdiJ_4xqA9r24cVPzpA==/730075720865799.jpg
-			byte[] albumImageData = music163.downloadPic(pic_url);
-			if (albumImageData != null) {
-				Mp3Helper.updateAlbumImg(file, albumImageData, getMimeType(pic_url));
-			}
-			
-		}
-	}
 
 	public Map<String, Object> getBestFit(List<Map<String, Object>> searchResults, Map<String, Object> mp3Info){
     	Map<String, Object> bestFits = null;
@@ -363,14 +325,13 @@ public class TcHunter implements Runnable {
 
 	public void run() {
 		try {
-//			tcHunt();
 			init();
-			updateMp3Info();
+			updateMusicInfo();
 			downloadLrc();
 			updateAlbumPic();
 		} catch (Exception e) {
 			logger.error("处理过程中发生错误", e);
-			badResult.get("errorList").add((String) mp3Info.get("title"));
+			badResult.get("errorList").add((String) musicInfo.get("title"));
 		}
 	}
 	
@@ -380,7 +341,7 @@ public class TcHunter implements Runnable {
 		mapper.configure(Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true) ;  
 		mapper.configure(Feature.ALLOW_SINGLE_QUOTES, true);
 		
-		String mp3file = "D:\\test\\13.深愛.mp3";
+		String mp3file = "D:\\test\\01. black bullet.flac";
 		
 		ConcurrentHashMap<String, Vector<String>> badResult = new ConcurrentHashMap<String, Vector<String>>();
 		badResult.put("badSearchList", new Vector<String>());

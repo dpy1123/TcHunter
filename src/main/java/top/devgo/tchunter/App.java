@@ -99,8 +99,8 @@ public class App {
     }
 	
 	
-	public void tcHunt(String mp3file) {
-		tcHunterThreadPool.execute(new TcHunter(httpclient, mapper, badResult, mp3file));
+	public void tcHunt(String musicFile) {
+		tcHunterThreadPool.execute(new TcHunter(httpclient, mapper, badResult, musicFile));
 	}
 
 
@@ -114,19 +114,13 @@ public class App {
         		if (file.isDirectory()) {
         			count += tcHuntAll(filename);
 				}else{
-					String extension = filename.substring(filename.lastIndexOf(".")+1);
-					if ("mp3".equals(extension.toLowerCase())) {
-						tcHunt(filename);
-						count++;
-					}
+					tcHunt(filename);
+					count++;
 				}
 			}
         }else{
-        	String extension = path.substring(path.lastIndexOf(".")+1);
-        	if ("mp3".equals(extension.toLowerCase())) {
-    			tcHunt(path);
-    			count++;
-        	}
+			tcHunt(path);
+			count++;
         }
 		return count;
 	}

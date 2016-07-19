@@ -1,4 +1,4 @@
-package top.devgo.tchunter.extend;
+package top.devgo.tchunter.file.extend;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

@@ -1,10 +1,10 @@
-package top.devgo.tchunter;
+package top.devgo.tchunter.file;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import top.devgo.tchunter.extend.TcMp3File;
+import top.devgo.tchunter.file.extend.TcMp3File;
 import top.devgo.tchunter.util.StringUtil;
 
 import com.mpatric.mp3agic.ID3v1;
@@ -16,11 +16,11 @@ import com.mpatric.mp3agic.NotSupportedException;
 import com.mpatric.mp3agic.UnsupportedTagException;
 
 /**
- * Mp3Info工具类
+ * Mp3操作类
  * @author dd
  *
  */
-public class Mp3Helper {
+public class Mp3Oper implements MusicFileOper {
 	
 	/**
 	 * 去除Mp3Info
@@ -50,10 +50,14 @@ public class Mp3Helper {
 	 * @param file
 	 * @param albumImageData
 	 * @param mimeType
+	 * @throws InvalidDataException 
+	 * @throws UnsupportedTagException 
 	 * @throws NotSupportedException
 	 * @throws IOException
 	 */
-	public static void updateAlbumImg(TcMp3File file, byte[] albumImageData, String mimeType) throws NotSupportedException, IOException {
+	@Override
+	public void updateAlbumImg(String path, byte[] albumImageData, String mimeType) throws UnsupportedTagException, InvalidDataException, IOException, NotSupportedException  {
+		TcMp3File file = new TcMp3File(path);
 		if (file.hasId3v2Tag()) {
 			ID3v2 id3v2Tag = file.getId3v2Tag();
 			byte[] old_img_data = id3v2Tag.getAlbumImage();
@@ -66,13 +70,17 @@ public class Mp3Helper {
 	
 	/**
 	 * 更新mp3file的信息
-	 * @param mp3file
-	 * @param bestfit_mp3Info
+	 * @param path
+	 * @param bestfitMp3Info
+	 * @throws InvalidDataException 
+	 * @throws UnsupportedTagException 
 	 * @throws IOException 
 	 * @throws NotSupportedException 
 	 */
-	public static void updateMp3Info(TcMp3File mp3file, Map<String, Object> bestfit_mp3Info) throws NotSupportedException, IOException {
+	@Override
+	public void updateInfo(String path, Map<String, Object> bestfitMp3Info) throws UnsupportedTagException, InvalidDataException, IOException, NotSupportedException  {
     	String title, track, artist, album;
+    	TcMp3File mp3file = new TcMp3File(path);
 //		ID3v1 id3v1Tag = null;
 //		if (mp3file.hasId3v1Tag()) {
 //			id3v1Tag = mp3file.getId3v1Tag();
@@ -111,11 +119,11 @@ public class Mp3Helper {
 		}
 		title = id3v2Tag.getTitle();
 		if(StringUtil.isBlank(title) || StringUtil.isMessyCode(title)){
-			id3v2Tag.setTitle((String) bestfit_mp3Info.get("title"));
+			id3v2Tag.setTitle((String) bestfitMp3Info.get("title"));
 		}
 		track = id3v2Tag.getTrack();
 		if(StringUtil.isBlank(track) ){
-			Object trk = bestfit_mp3Info.get("track");
+			Object trk = bestfitMp3Info.get("track");
 			if(trk instanceof Integer){
 				id3v2Tag.setTrack(trk+"");
 			}else{
@@ -124,11 +132,11 @@ public class Mp3Helper {
 		}
 		artist = id3v2Tag.getArtist();
 		if(StringUtil.isBlank(artist) || StringUtil.isMessyCode(artist)){
-			id3v2Tag.setArtist((String) bestfit_mp3Info.get("artist"));
+			id3v2Tag.setArtist((String) bestfitMp3Info.get("artist"));
 		}
 		album = id3v2Tag.getAlbum();
 		if(StringUtil.isBlank(album) || StringUtil.isMessyCode(album)){
-			id3v2Tag.setAlbum((String) bestfit_mp3Info.get("album"));
+			id3v2Tag.setAlbum((String) bestfitMp3Info.get("album"));
 		}
 		mp3file.save();
 	}
@@ -141,7 +149,8 @@ public class Mp3Helper {
      * @throws InvalidDataException
      * @throws IOException
      */
-    public static Map<String, Object> getMp3Info(String filePath) throws UnsupportedTagException, InvalidDataException, IOException{
+	@Override
+    public Map<String, Object> getInfo(String filePath) throws UnsupportedTagException, InvalidDataException, IOException{
 		Map<String, Object> info = new HashMap<String, Object>();
 
 		String name = filePath.substring(filePath.lastIndexOf('\\')+1, filePath.lastIndexOf('.'));
@@ -191,7 +200,7 @@ public class Mp3Helper {
      * @throws InvalidDataException
      * @throws IOException
      */
-    public static void displayMp3Info(String path) throws UnsupportedTagException, InvalidDataException, IOException{
+    public void displayMp3Info(String path) throws UnsupportedTagException, InvalidDataException, IOException{
 		Mp3File mp3file = new Mp3File(path);
 		if (mp3file.hasId3v1Tag()) {
 			ID3v1 id3v1Tag = mp3file.getId3v1Tag();
